@@ -26,8 +26,12 @@ parser.add_argument("--lr", type=float, default=0.01, help="initial learning rat
 parser.add_argument("--wd", type=float, default=5e-4, help="weight decay")
 parser.add_argument("--temperature", type=float, default=8, help="temperature logits are divided by")
 parser.add_argument("--normal_classes", required=True, nargs="+", type=int, help="Normal classes in cifar10")
+parser.add_argument("--debug", action='store_true')
 args = parser.parse_args()
 
+def debug(*argsss):
+    if args.debug:
+        print(argsss)
 
 def kd_loss_fn(teacher_outs, student_outs):
     loss = nn.KLDivLoss(reduction="batchmean")
@@ -98,7 +102,9 @@ def train(teacher, student):
     anomaly_mask = ~normal_mask
     normal_indices = normal_mask.nonzero().reshape(-1)
     normal_subset = Subset(cifar10_trainset, normal_indices)
+    debug("type(normal_subset):", type(normal_subset))
     normal_dataloader = DataLoader(normal_subset, shuffle=False, batch_size=args.test_bs)
+    debug("type(normal_dataloader):", type(normal_dataloader))
     anomaly_indices = anomaly_mask.nonzero().reshape(-1)
     anomaly_subset = Subset(cifar10_trainset, anomaly_indices)
     anomaly_dataloader = DataLoader(anomaly_subset, shuffle=False, batch_size=args.test_bs)
