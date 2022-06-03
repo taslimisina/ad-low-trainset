@@ -107,7 +107,7 @@ def train(teacher, student):
 
     for i in range(args.epochs):
         l = 0
-        for data in train_loader:
+        for data, _ in train_loader:
             data.to(device)
             with torch.no_grad():
                 teacher_outs = teacher(data)
