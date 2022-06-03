@@ -16,16 +16,16 @@ torch.backends.cudnn.benchmark = True
 device = 'cuda'
 
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image For Anomaly Detection.")
-parser.add_argument("--images_dir", type=str, required=True, description="path to one-image dataset")
-parser.add_argument("--batch_size", type=int, default=512, description="Batch size")
-parser.add_argument("--test_bs", type=int, default=1, description="Test Batch size")
-parser.add_argument("--workers", type=int, default=2, description="Number of dataloader workers")
-parser.add_argument("--epochs", type=int, default=1000, description="Number of epochs")
-parser.add_argument("--eval", type=int, default=1, description="Evaluate after this number of epochs")
-parser.add_argument("--lr", type=float, default=0.01, description="initial learning rate")
-parser.add_argument("--wd", type=float, default=5e-4, description="weight decay")
-parser.add_argument("--temperature", type=float, default=8, description="temperature logits are divided by")
-parser.add_argument("--normal_classes", required=True, nargs="+", description="Normal classes in cifar10")
+parser.add_argument("--images_dir", type=str, required=True, help="path to one-image dataset")
+parser.add_argument("--batch_size", type=int, default=512, help="Batch size")
+parser.add_argument("--test_bs", type=int, default=1, help="Test Batch size")
+parser.add_argument("--workers", type=int, default=2, help="Number of dataloader workers")
+parser.add_argument("--epochs", type=int, default=1000, help="Number of epochs")
+parser.add_argument("--eval", type=int, default=1, help="Evaluate after this number of epochs")
+parser.add_argument("--lr", type=float, default=0.01, help="initial learning rate")
+parser.add_argument("--wd", type=float, default=5e-4, help="weight decay")
+parser.add_argument("--temperature", type=float, default=8, help="temperature logits are divided by")
+parser.add_argument("--normal_classes", required=True, nargs="+", help="Normal classes in cifar10")
 args = parser.parse_args()
 
 
