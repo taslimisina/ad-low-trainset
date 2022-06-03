@@ -40,33 +40,34 @@ def kd_loss_fn(teacher_outs, student_outs):
     return kd_loss
 
 
-@torch.no_grad()
 def test(teacher, student, normal_dataloader, anomaly_dataloader):
-    student.eval()
+    with torch.no_grad():
+        student.eval()
 
-    targets = []
-    losses = []
+        targets = []
+        losses = []
 
-    for data, _ in normal_dataloader:
-        data = data.to(device)
-        teacher_outs = teacher(data)
-        student_outs = student(data)
-        loss = kd_loss_fn(teacher_outs, student_outs)
-        losses.append(loss.item())      # is it okay for >1 test batch size?
-        targets.append(0)
+        debug("normal_dataloader", type(normal_dataloader), normal_dataloader)
+        for data, _ in normal_dataloader:
+            data = data.to(device)
+            teacher_outs = teacher(data)
+            student_outs = student(data)
+            loss = kd_loss_fn(teacher_outs, student_outs)
+            losses.append(loss.item())      # is it okay for >1 test batch size?
+            targets.append(0)
 
-    for data, _ in anomaly_dataloader:
-        data = data.to(device)
-        teacher_outs = teacher(data)
-        student_outs = student(data)
-        loss = kd_loss_fn(teacher_outs, student_outs)
-        losses.append(loss.item())      # is it okay for >1 test batch size?
-        targets.append(1)
+        for data, _ in anomaly_dataloader:
+            data = data.to(device)
+            teacher_outs = teacher(data)
+            student_outs = student(data)
+            loss = kd_loss_fn(teacher_outs, student_outs)
+            losses.append(loss.item())      # is it okay for >1 test batch size?
+            targets.append(1)
 
-    auc = roc_auc_score(targets, losses)
-    print("AUROC:", auc)
+        auc = roc_auc_score(targets, losses)
+        print("AUROC:", auc)
 
-    student.train()
+        student.train()
 
 
 def train(teacher, student):
