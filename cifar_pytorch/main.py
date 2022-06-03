@@ -25,7 +25,7 @@ parser.add_argument("--eval", type=int, default=1, help="Evaluate after this num
 parser.add_argument("--lr", type=float, default=0.01, help="initial learning rate")
 parser.add_argument("--wd", type=float, default=5e-4, help="weight decay")
 parser.add_argument("--temperature", type=float, default=8, help="temperature logits are divided by")
-parser.add_argument("--normal_classes", required=True, nargs="+", help="Normal classes in cifar10")
+parser.add_argument("--normal_classes", required=True, nargs="+", type=int, help="Normal classes in cifar10")
 args = parser.parse_args()
 
 
@@ -92,9 +92,9 @@ def train(teacher, student):
 
     # test dataloaders
     cifar10_trainset = CIFAR10(root='./data', train=True, download=True, transform=trnsfrms)
-    normal_mask = torch.tensor(cifar10_trainset.targets) == args.normal_classes[0]
+    normal_mask = (torch.tensor(cifar10_trainset.targets) == args.normal_classes[0])
     for i in range(1, len(args.normal_classes)):
-        normal_mask |= torch.tensor(cifar10_trainset.targets) == args.normal_classes[i]
+        normal_mask = normal_mask | (torch.tensor(cifar10_trainset.targets) == args.normal_classes[i])
     anomaly_mask = ~normal_mask
     normal_indices = normal_mask.nonzero().reshape(-1)
     normal_subset = Subset(cifar10_trainset, normal_indices)
