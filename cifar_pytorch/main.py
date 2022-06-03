@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
 
 torch.backends.cudnn.benchmark = True
-device = 'cuda'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image For Anomaly Detection.")
 parser.add_argument("--images_dir", type=str, required=True, help="path to one-image dataset")
@@ -43,16 +43,16 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
     targets = []
     losses = []
 
-    for data, targets in normal_dataloader:
-        data.to(device)
+    for data, _ in normal_dataloader:
+        data = data.to(device)
         teacher_outs = teacher(data)
         student_outs = student(data)
         loss = kd_loss_fn(teacher_outs, student_outs)
         losses.append(loss.item())      # is it okay for >1 test batch size?
         targets.append(0)
 
-    for data, targets in anomaly_dataloader:
-        data.to(device)
+    for data, _ in anomaly_dataloader:
+        data = data.to(device)
         teacher_outs = teacher(data)
         student_outs = student(data)
         loss = kd_loss_fn(teacher_outs, student_outs)
@@ -108,7 +108,7 @@ def train(teacher, student):
     for i in range(args.epochs):
         l = 0
         for data, _ in train_loader:
-            data.to(device)
+            data = data.to(device)
             with torch.no_grad():
                 teacher_outs = teacher(data)
             student_outs = student(data)
