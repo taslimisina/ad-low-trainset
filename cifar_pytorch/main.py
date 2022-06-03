@@ -12,6 +12,8 @@ from torch.utils.data import Subset
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
 
+torch.backends.cudnn.benchmark = True
+device = 'cuda'
 
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image For Anomaly Detection.")
 parser.add_argument("--images_dir", type=str, required=True, description="path to one-image dataset")
@@ -42,6 +44,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
     losses = []
 
     for data, targets in normal_dataloader:
+        data.to(device)
         teacher_outs = teacher(data)
         student_outs = student(data)
         loss = kd_loss_fn(teacher_outs, student_outs)
@@ -49,6 +52,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         targets.append(0)
 
     for data, targets in anomaly_dataloader:
+        data.to(device)
         teacher_outs = teacher(data)
         student_outs = student(data)
         loss = kd_loss_fn(teacher_outs, student_outs)
@@ -104,6 +108,7 @@ def train(teacher, student):
     for i in range(args.epochs):
         l = 0
         for data in train_loader:
+            data.to(device)
             with torch.no_grad():
                 teacher_outs = teacher(data)
             student_outs = student(data)
@@ -124,7 +129,9 @@ def train(teacher, student):
 
 def main(args):
     teacher = resnets.wide_resnet50_2(pretrained=True)
+    teacher.to(device)
     student = resnets.wide_resnet50_2(pretrained=False)
+    student.to(device)
     train(teacher, student)
 
 
