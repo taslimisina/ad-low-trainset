@@ -46,7 +46,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
 
         targets = []
         losses = []
-        criterion = nn.KLDivLoss(reduction='none')
+        criterion = nn.KLDivLoss(reduction='batchmean')
 
         for data, _ in normal_dataloader:
             data = data.to(device)
@@ -58,6 +58,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
                         F.softmax(teacher_outs / args.temperature, dim=1))
             debug("loss.shape:", loss.shape)
             for l in loss:
+                debug("l.shape:", l.shape)
                 losses.append(l.item())
                 targets.append(0)
 
