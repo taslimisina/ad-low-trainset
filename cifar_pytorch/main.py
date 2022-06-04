@@ -47,7 +47,6 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         targets = []
         losses = []
 
-        debug("normal_dataloader", type(normal_dataloader), normal_dataloader)
         for data, _ in normal_dataloader:
             data = data.to(device)
             teacher_outs = teacher(data)
@@ -96,16 +95,14 @@ def train(teacher, student):
                       weight_decay=args.wd)
 
     # test dataloaders
-    cifar10_trainset = CIFAR10(root='./data', train=True, download=True, transform=trnsfrms)
+    cifar10_trainset = CIFAR10(root='./data', train=True, download=True, transform=transforms.Compose(trnsfrms))
     normal_mask = (torch.tensor(cifar10_trainset.targets) == args.normal_classes[0])
     for i in range(1, len(args.normal_classes)):
         normal_mask = normal_mask | (torch.tensor(cifar10_trainset.targets) == args.normal_classes[i])
     anomaly_mask = ~normal_mask
     normal_indices = normal_mask.nonzero().reshape(-1)
     normal_subset = Subset(cifar10_trainset, normal_indices)
-    debug("type(normal_subset):", type(normal_subset))
     normal_dataloader = DataLoader(normal_subset, shuffle=False, batch_size=args.test_bs)
-    debug("type(normal_dataloader):", type(normal_dataloader))
     anomaly_indices = anomaly_mask.nonzero().reshape(-1)
     anomaly_subset = Subset(cifar10_trainset, anomaly_indices)
     anomaly_dataloader = DataLoader(anomaly_subset, shuffle=False, batch_size=args.test_bs)
