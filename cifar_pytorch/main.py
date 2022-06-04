@@ -18,7 +18,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image For Anomaly Detection.")
 parser.add_argument("--images_dir", type=str, required=True, help="path to one-image dataset")
 parser.add_argument("--batch_size", type=int, default=512, help="Batch size")
-parser.add_argument("--test_bs", type=int, default=1, help="Test Batch size")
+parser.add_argument("--test_bs", type=int, default=512, help="Test Batch size")
 parser.add_argument("--workers", type=int, default=2, help="Number of dataloader workers")
 parser.add_argument("--epochs", type=int, default=1000, help="Number of epochs")
 parser.add_argument("--eval", type=int, default=1, help="Evaluate after this number of epochs")
@@ -46,23 +46,31 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
 
         targets = []
         losses = []
+        criterion = nn.KLDivLoss(reduction='none')
 
         for data, _ in normal_dataloader:
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            loss = kd_loss_fn(teacher_outs, student_outs)
-            losses.append(loss.item())      # is it okay for >1 test batch size?
-            targets.append(0)
+            loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
+                        F.softmax(teacher_outs / args.temperature, dim=1))
+            debug(loss)
+            for l in loss:
+                losses.append(l.item())
+                targets.append(0)
 
         for data, _ in anomaly_dataloader:
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            loss = kd_loss_fn(teacher_outs, student_outs)
-            losses.append(loss.item())      # is it okay for >1 test batch size?
-            targets.append(1)
+            loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
+                             F.softmax(teacher_outs / args.temperature, dim=1))
+            for l in loss:
+                losses.append(l.item())      # is it okay for >1 test batch size?
+                targets.append(1)
 
+        debug("targets:", targets)
+        debug("Losses:", losses)
         auc = roc_auc_score(targets, losses)
         print("AUROC:", auc)
 
@@ -124,7 +132,7 @@ def train(teacher, student):
             loss.backward()
             optimizer.step()
 
-        print("Epoch:", i, "\tLoss:", l)
+        print("Epoch:", i, "\tLoss:", l)    # Todo loss is not accurate (KL loss -> reduction(mean))
 
         if i % args.eval == 0:
             test(teacher, student, normal_dataloader, anomaly_dataloader)
