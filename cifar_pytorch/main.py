@@ -52,11 +52,12 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            debug("teacher_outs.shape:", teacher_outs.shape)
-            debug("student_outs.shape:", student_outs.shape)
+            # debug("teacher_outs.shape:", teacher_outs.shape)
+            # debug("student_outs.shape:", student_outs.shape)
             loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
                         F.softmax(teacher_outs / args.temperature, dim=1))
-            debug("loss:", loss.shape, loss)
+            # debug("loss:", loss.shape, loss)
+            loss = loss.sum(dim=1)
             for l in loss:
                 debug("l:", l.shape, l)
                 losses.append(l.item())
@@ -68,6 +69,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
             student_outs = student(data)
             loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
                              F.softmax(teacher_outs / args.temperature, dim=1))
+            loss = loss.sum(dim=1)
             for l in loss:
                 losses.append(l.item())      # is it okay for >1 test batch size?
                 targets.append(1)
