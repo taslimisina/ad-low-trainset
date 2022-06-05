@@ -1,7 +1,6 @@
 import argparse
 from architectures import resnets
 import torch
-import torchvision
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import torch.nn as nn
@@ -52,11 +51,8 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            # debug("teacher_outs.shape:", teacher_outs.shape)
-            # debug("student_outs.shape:", student_outs.shape)
             loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
                         F.softmax(teacher_outs / args.temperature, dim=1))
-            # debug("loss:", loss.shape, loss)
             loss = loss.sum(dim=1)
             for l in loss:
                 debug("l:", l.shape, l)
@@ -130,8 +126,6 @@ def train(teacher, student):
                 teacher_outs = teacher(data)
             student_outs = student(data)
             loss = kd_loss_fn(teacher_outs, student_outs)
-            if i == 0:
-                debug("loss:", loss.shape, loss)
 
             l += loss.item()
 
