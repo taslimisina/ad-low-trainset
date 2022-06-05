@@ -128,6 +128,8 @@ def train(teacher, student):
                 teacher_outs = teacher(data)
             student_outs = student(data)
             loss = kd_loss_fn(teacher_outs, student_outs)
+            if i == 0:
+                debug("loss:", loss.shape, loss)
 
             l += loss.item()
 
