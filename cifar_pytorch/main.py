@@ -45,6 +45,8 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
 
         targets = []
         losses = []
+        targets_1v1 = [[] for i in range(10)]
+        losses_1v1 = [[] for i in range(10)]
         criterion = nn.KLDivLoss(reduction='none')
 
         for data, _ in normal_dataloader:
@@ -58,20 +60,26 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
                 debug("l:", l.shape, l)
                 losses.append(l.item())
                 targets.append(0)
+                for i in range(10):
+                    losses_1v1[i].append(l.item())
+                    targets_1v1[i].append(0)
 
-        for data, _ in anomaly_dataloader:
+        for data, cls in anomaly_dataloader:
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
             loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
                              F.softmax(teacher_outs / args.temperature, dim=1))
             loss = loss.sum(dim=1)
-            for l in loss:
-                losses.append(l.item())      # is it okay for >1 test batch size?
+            for i, l in enumerate(loss):
+                losses.append(l.item())
                 targets.append(1)
+                losses_1v1[cls[i]].append(l.item())
+                targets_1v1[cls[i]].append(1)
 
-        debug("targets:", targets)
-        debug("Losses:", losses)
+        for i in range(10):
+            auc = roc_auc_score(targets_1v1[i], losses_1v1[i])
+            print("AUROC vs class", i, ":\t", auc)
         auc = roc_auc_score(targets, losses)
         print("AUROC:", auc)
 
