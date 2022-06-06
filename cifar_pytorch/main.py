@@ -78,7 +78,11 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
                 targets_1v1[cls[i]].append(1)
 
         for i in range(10):
-            auc = roc_auc_score(targets_1v1[i], losses_1v1[i])
+            try:
+                auc = roc_auc_score(targets_1v1[i], losses_1v1[i])
+            except:
+                print("AUROC vs class", i, ":\t-----")
+                continue
             print("AUROC vs class", i, ":\t", auc)
         auc = roc_auc_score(targets, losses)
         print("AUROC:", auc)
