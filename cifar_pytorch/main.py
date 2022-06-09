@@ -80,10 +80,9 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         for i in range(10):
             try:
                 auc = roc_auc_score(targets_1v1[i], losses_1v1[i])
+                print("AUROC vs class", i, ":\t", auc)
             except:
                 print("AUROC vs class", i, ":\t-----")
-                continue
-            print("AUROC vs class", i, ":\t", auc)
         auc = roc_auc_score(targets, losses)
         print("AUROC:", auc)
 
