@@ -26,6 +26,10 @@ parser.add_argument("--wd", type=float, default=5e-4, help="weight decay")
 parser.add_argument("--temperature", type=float, default=8, help="temperature logits are divided by")
 parser.add_argument("--normal_classes", required=True, nargs="+", type=int, help="Normal classes in cifar10")
 parser.add_argument("--debug", action='store_true')
+parser.add_argument("--student_layers", default=[3, 4, 6, 3], nargs=4, type=int,
+                    help="Number of blocks in each layer in student wide-resnet.")
+parser.add_argument("--withfc", action='store_true',
+                    help="Get ouputs of teacher and student after fully-connected layer or before.")
 args = parser.parse_args()
 
 def debug(*argsss):
@@ -127,7 +131,7 @@ def train(teacher, student):
     anomaly_subset = Subset(cifar10_trainset, anomaly_indices)
     anomaly_dataloader = DataLoader(anomaly_subset, shuffle=False, batch_size=args.test_bs)
 
-    teacher.eval()  # okay?
+    teacher.eval()
 
     for i in range(args.epochs):
         l = 0
@@ -154,7 +158,7 @@ def train(teacher, student):
 def main(args):
     teacher = resnets.wide_resnet50_2(pretrained=True)
     teacher.to(device)
-    student = resnets.wide_resnet50_2(pretrained=False)
+    student = resnets.custom_wrn(layers=args.student_layers, withfc=args.withfc)
     student.to(device)
     train(teacher, student)
 
