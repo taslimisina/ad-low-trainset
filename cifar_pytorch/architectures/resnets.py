@@ -45,4 +45,4 @@ def wide_resnet50_2(pretrained, progress=True, withfc=False):
         state_dict = load_state_dict_from_url('https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth',
                                               progress=progress)
         model.load_state_dict(state_dict)
-    return models.wide_resnet50_2(pretrained=pretrained)
+    return model
