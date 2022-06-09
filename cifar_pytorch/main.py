@@ -156,7 +156,7 @@ def train(teacher, student):
 
 
 def main(args):
-    teacher = resnets.wide_resnet50_2(pretrained=True)
+    teacher = resnets.wide_resnet50_2(pretrained=True, withfc=args.withfc)
     teacher.to(device)
     student = resnets.custom_wrn(layers=args.student_layers, withfc=args.withfc)
     student.to(device)

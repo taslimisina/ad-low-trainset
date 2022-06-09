@@ -1,8 +1,7 @@
 import torch
 import torchvision.models as models
 from torchvision.models.resnet import ResNet, Bottleneck
-from torchvision.models.utils import load_state_dict_from_url
-
+from torch.hub import load_state_dict_from_url
 
 class MyWideResnet(ResNet):
     def __init__(self, block, layers, withfc, **kwargs):
