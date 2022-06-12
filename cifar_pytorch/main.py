@@ -14,6 +14,22 @@ from sklearn.metrics import roc_auc_score
 torch.backends.cudnn.benchmark = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+# Reproducibility
+seed = 10
+torch.manual_seed(seed)
+import random
+random.seed(seed)
+import numpy as np
+np.random.seed(seed)
+# torch.backends.cudnn.benchmark = False
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.deterministic = True
+def seed_worker(worker_id):
+    np.random.seed(seed)
+    random.seed(seed)
+generator = torch.Generator()
+generator.manual_seed(seed)
+
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image For Anomaly Detection.")
 parser.add_argument("--images_dir", type=str, required=True, help="path to one-image dataset")
 parser.add_argument("--batch_size", type=int, default=512, help="Batch size")
@@ -112,7 +128,9 @@ def train(teacher, student):
         num_workers=args.workers,
         pin_memory=True,
         shuffle=True,
-        drop_last=True
+        drop_last=True,
+        worker_init_fn=seed_worker,
+        generator=generator
     )
 
     optimizer = AdamW(student.parameters(), lr=args.lr,
@@ -126,10 +144,26 @@ def train(teacher, student):
     anomaly_mask = ~normal_mask
     normal_indices = normal_mask.nonzero().reshape(-1)
     normal_subset = Subset(cifar10_trainset, normal_indices)
-    normal_dataloader = DataLoader(normal_subset, shuffle=False, batch_size=args.test_bs)
+    normal_dataloader = DataLoader(
+        normal_subset,
+        shuffle=False,
+        batch_size=args.test_bs,
+        num_workers=args.workers,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
+        generator=generator
+    )
     anomaly_indices = anomaly_mask.nonzero().reshape(-1)
     anomaly_subset = Subset(cifar10_trainset, anomaly_indices)
-    anomaly_dataloader = DataLoader(anomaly_subset, shuffle=False, batch_size=args.test_bs)
+    anomaly_dataloader = DataLoader(
+        anomaly_subset,
+        shuffle=False,
+        batch_size=args.test_bs,
+        num_workers=args.workers,
+        pin_memory=True,
+        worker_init_fn=seed_worker,
+        generator=generator
+    )
 
     teacher.eval()
 

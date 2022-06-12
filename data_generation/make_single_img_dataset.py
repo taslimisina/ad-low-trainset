@@ -14,6 +14,22 @@ import time
 from PIL import ImageFilter
 import random
 
+# Reproducibility
+seed = 10
+torch.manual_seed(seed)
+import random
+random.seed(seed)
+import numpy as np
+np.random.seed(seed)
+torch.backends.cudnn.benchmark = False
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.deterministic = True
+def seed_worker(worker_id):
+    np.random.seed(seed)
+    random.seed(seed)
+generator = torch.Generator()
+generator.manual_seed(seed)
+
 class GaussianBlur(object):
     """Gaussian blur augmentation from SimCLR https://arxiv.org/abs/2002.05709"""
 
@@ -138,7 +154,7 @@ class MonoDataset(torch.utils.data.Dataset):
 def get_mono_data_loader(batch_size, num_workers, **kwargs):
     m = MonoDataset(**kwargs)
     return torch.utils.data.DataLoader(m, batch_size=batch_size, num_workers=num_workers,
-                                       drop_last=True)
+                                       drop_last=True, worker_init_fn=seed_worker, generator=generator)
 
 def save_batch_imgs(imgs, count, pth):
     for k in range(imgs.size(0)):
