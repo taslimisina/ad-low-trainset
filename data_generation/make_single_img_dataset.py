@@ -140,6 +140,7 @@ class MonoDataset(torch.utils.data.Dataset):
         if mean != [0, 0, 0]:
             tfslist.append(normalize)
 
+
         # without rotation and center-crop
         if randinterp and not debug:
             resizedcrop2 = tfs.RandomApply([MyRandomResizedCrop(crop_size, scale=scale, interpolation=1),
@@ -154,7 +155,7 @@ class MonoDataset(torch.utils.data.Dataset):
         if scale[0] > 0:
             tfslist2.append(resizedcrop2)
         if shear != 0:
-            tfslist2.append(tfs.RandomAffine(degrees, translate=None, scale=None, shear=shear, resample=Image.BILINEAR,
+            tfslist2.append(tfs.RandomAffine(degrees=0, translate=None, scale=None, shear=shear, resample=Image.BILINEAR,
                                             fillcolor=0))
 
         if vflip:
