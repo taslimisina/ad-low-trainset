@@ -160,7 +160,6 @@ class MonoDataset(torch.utils.data.Dataset):
         if vflip:
             tfslist2.append(tfs.RandomVerticalFlip(p=0.5))
 
-        tfslist2.append(tfs.CenterCrop(crop_size))
         if debug:
             tfslist2.append(tfs.Resize((32, 32)))
         else:
@@ -172,7 +171,7 @@ class MonoDataset(torch.utils.data.Dataset):
         if mean != [0, 0, 0]:
             tfslist2.append(normalize)
 
-        self.transforms = tfs.RandomApply([tfs.Compose(tfslist), tfs.Compose(tfslist2)], p=0.5)
+        self.transforms = tfs.RandomChoice([tfs.Compose(tfslist), tfs.Compose(tfslist2)])
         print("transforms:", self.transforms)
 
     def __len__(self):
