@@ -139,8 +139,41 @@ class MonoDataset(torch.utils.data.Dataset):
         tfslist.append(tfs.ToTensor())
         if mean != [0, 0, 0]:
             tfslist.append(normalize)
-        self.transforms = tfs.Compose(tfslist)
-        print("transforms:", tfslist)
+
+        # without rotation and center-crop
+        if randinterp and not debug:
+            resizedcrop2 = tfs.RandomApply([MyRandomResizedCrop(crop_size, scale=scale, interpolation=1),
+                                           MyRandomResizedCrop(crop_size, scale=scale, interpolation=2),
+                                           MyRandomResizedCrop(crop_size, scale=scale, interpolation=3)])
+        else:
+            resizedcrop2 = MyRandomResizedCrop(crop_size, scale=scale, interpolation=3)
+        tfslist2 = []
+        if cropfirst:
+            tfslist2.append(tfs.RandomCrop(int(initcrop * min(self.img.size))))
+
+        if scale[0] > 0:
+            tfslist2.append(resizedcrop2)
+        if shear != 0:
+            tfslist2.append(tfs.RandomAffine(degrees, translate=None, scale=None, shear=shear, resample=Image.BILINEAR,
+                                            fillcolor=0))
+
+        if vflip:
+            tfslist2.append(tfs.RandomVerticalFlip(p=0.5))
+
+        tfslist2.append(tfs.CenterCrop(crop_size))
+        if debug:
+            tfslist2.append(tfs.Resize((32, 32)))
+        else:
+            tfslist2.extend([
+                tfs.RandomApply([tfs.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1)], 0.5),
+                # GaussianBlur()
+            ])
+        tfslist2.append(tfs.ToTensor())
+        if mean != [0, 0, 0]:
+            tfslist2.append(normalize)
+
+        self.transforms = tfs.RandomApply([tfs.Compose(tfslist), tfs.Compose(tfslist2)], p=0.5)
+        print("transforms:", self.transforms)
 
     def __len__(self):
         return self.length
