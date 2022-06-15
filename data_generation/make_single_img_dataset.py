@@ -214,6 +214,7 @@ def get_parser():
     parser.add_argument('--debug', default=False)
     parser.add_argument('--imgpath', default="images/ameyoko.jpg", type=str)
     parser.add_argument('--targetpath', default="./out", type=str)
+    parser.add_argument('--end_folder', type=str, default="dummy")
     return parser
 
 
@@ -230,7 +231,7 @@ if __name__ == "__main__":
     path = args.targetpath + str(args.img_size) + "_single" + args.imgpath.split('/')[-1].split('.')[0]
     path += f"_init{args.initcrop}_deg{args.deg}_scale{args.scale[0]}_{args.scale[1]}"
     path += f"_shear{args.shear}_randinterp_{args.randinterp}_vflip{args.vflip}_cropfirst{args.cropfirst}_new_{args.num_imgs}"
-    path += '/train/dummy'
+    path += '/train/' + args.end_folder
     os.makedirs(path, exist_ok=True)
     args.img_per_thread = args.num_imgs//args.threads
 
@@ -250,7 +251,7 @@ if __name__ == "__main__":
         for i in os.listdir(path):
             p = Image.open(path+"/"+i)
             tensors.append(tfs.ToTensor()(p))
-        save_image(tensors, path.replace('/dummy', '.png'), nrow=8, padding=3)
+        save_image(tensors, path.replace('/' + args.end_folder, '.png'), nrow=8, padding=3)
 
     ############################ 10 imagenet images ########################################
     # chosen = ['n04443257/n04443257_36457.JPEG',
