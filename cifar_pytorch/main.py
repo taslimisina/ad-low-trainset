@@ -10,6 +10,7 @@ from torchvision.datasets import CIFAR10
 from torch.utils.data import Subset
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
+import logging
 
 torch.backends.cudnn.benchmark = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -46,7 +47,10 @@ parser.add_argument("--student_layers", default=[3, 4, 6, 3], nargs=4, type=int,
                     help="Number of blocks in each layer in student wide-resnet.")
 parser.add_argument("--withfc", action='store_true',
                     help="Get ouputs of teacher and student after fully-connected layer or before.")
+parser.add_argument("--log", type=str, default="log.txt", help="location of log file")
 args = parser.parse_args()
+
+logging.basicConfig(filename=args.log, filemode='w')
 
 def debug(*argsss):
     if args.debug:
@@ -100,11 +104,11 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         for i in range(10):
             try:
                 auc = roc_auc_score(targets_1v1[i], losses_1v1[i])
-                print("AUROC vs class", i, ":\t", auc)
+                logging.info("AUROC vs class " + str(i) + ":\t" + str(auc))
             except:
-                print("AUROC vs class", i, ":\t-----")
+                logging.info("AUROC vs class " + str(i) + ":\t--------")
         auc = roc_auc_score(targets, losses)
-        print("AUROC:", auc)
+        logging.info("AUROC: " + str(auc))
 
         student.train()
 
@@ -182,7 +186,7 @@ def train(teacher, student):
             loss.backward()
             optimizer.step()
 
-        print("Epoch:", i, "\tLoss:", l)    # Todo loss is not accurate (KL loss -> reduction(mean))
+        logging.info("Epoch: " + str(i) + "\tLoss:" + str(l))    # Todo loss is not accurate (KL loss -> reduction(mean))
 
         if i % args.eval == 0:
             test(teacher, student, normal_dataloader, anomaly_dataloader)
