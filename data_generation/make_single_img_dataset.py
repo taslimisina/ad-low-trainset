@@ -228,7 +228,7 @@ if __name__ == "__main__":
         args.num_imgs = 64
         args.threads = 2
 
-    path = args.targetpath + str(args.img_size) + "_single" + args.imgpath.split('/')[-1].split('.')[0]
+    path = args.targetpath + str(args.img_size) + "_single"
     path += f"_init{args.initcrop}_deg{args.deg}_scale{args.scale[0]}_{args.scale[1]}"
     path += f"_shear{args.shear}_randinterp_{args.randinterp}_vflip{args.vflip}_cropfirst{args.cropfirst}_new_{args.num_imgs}"
     path += '/train/' + args.end_folder
