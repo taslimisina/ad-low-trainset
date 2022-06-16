@@ -50,11 +50,8 @@ parser.add_argument("--withfc", action='store_true',
 parser.add_argument("--log", type=str, default="log.txt", help="location of log file")
 args = parser.parse_args()
 
-logging.basicConfig(filename=args.log, filemode='w')
-
-def debug(*argsss):
-    if args.debug:
-        print(argsss)
+logging.basicConfig(filename=args.log, filemode='w', level=logging.DEBUG if args.debug else logging.INFO)
+logging.info(args)
 
 def kd_loss_fn(teacher_outs, student_outs):
     loss = nn.KLDivLoss(reduction="batchmean")
@@ -81,7 +78,6 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
                         F.softmax(teacher_outs / args.temperature, dim=1))
             loss = loss.sum(dim=1)
             for l in loss:
-                debug("l:", l.shape, l)
                 losses.append(l.item())
                 targets.append(0)
                 for i in range(10):
