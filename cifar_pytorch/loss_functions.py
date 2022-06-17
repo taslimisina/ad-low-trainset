@@ -33,7 +33,7 @@ class MseDirectionLoss(nn.Module):
         # different terms of loss
         abs_loss_0 = self.criterion(y_pred_0, y_0)
         loss_0 = 1 - self.similarity_loss(y_pred_0.view(y_pred_0.shape[0], -1), y_0.view(y_0.shape[0], -1))
-        if self.reduction == "none":
+        if self.reduction == "mean":
             loss_0 = torch.mean(loss_0)
 
         total_loss = loss_0 + self.lamda * (
