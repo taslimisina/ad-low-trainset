@@ -27,9 +27,6 @@ class MseDirectionLoss(nn.Module):
         self.similarity_loss = torch.nn.CosineSimilarity()
 
     def forward(self, output_real, output_pred):
-        print("output_pred:", output_pred.shape)
-        print("output_real:", output_real.shape)
-
         y_pred_0 = output_pred
         y_0 = output_real
 
