@@ -11,6 +11,7 @@ from torch.utils.data import Subset
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score
 import logging
+from loss_functions import KldLoss, MseDirectionLoss
 
 torch.backends.cudnn.benchmark = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -48,6 +49,9 @@ parser.add_argument("--student_layers", default=[3, 4, 6, 3], nargs=4, type=int,
 parser.add_argument("--withfc", action='store_true',
                     help="Get ouputs of teacher and student after fully-connected layer or before.")
 parser.add_argument("--log", type=str, default="log.txt", help="location of log file")
+parser.add_argument("--lossfn", type=str, choices=["kl", "mse"],
+                    default="kl", help="Loss function - KL divergance or MSE")
+parser.add_argument("--lamda", type=float, default=0.01, help="coefficient for MSE loss")
 args = parser.parse_args()
 
 logging.basicConfig(filename=args.log, filemode='w', level=logging.DEBUG if args.debug else logging.INFO)
@@ -68,15 +72,18 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         losses = []
         targets_1v1 = [[] for i in range(10)]
         losses_1v1 = [[] for i in range(10)]
-        criterion = nn.KLDivLoss(reduction='none')
+        if args.lossfn == "kl":
+            criterion = KldLoss(reduction='none', temperature=args.temperature)
+        elif args.lossfn == "mse":
+            criterion = MseDirectionLoss(args.lamda)
+        else:
+            logging.ERROR("Loss function not defined!")
 
         for data, _ in normal_dataloader:
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
-                        F.softmax(teacher_outs / args.temperature, dim=1))
-            loss = loss.sum(dim=1)
+            loss = criterion(student_outs, teacher_outs)
             for l in loss:
                 losses.append(l.item())
                 targets.append(0)
@@ -105,8 +112,6 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
                 logging.info("AUROC vs class " + str(i) + ":\t--------")
         auc = roc_auc_score(targets, losses)
         logging.info("AUROC: " + str(auc))
-
-        student.train()
 
 
 def train(teacher, student):
@@ -167,14 +172,22 @@ def train(teacher, student):
 
     teacher.eval()
 
+    if args.lossfn == "kl":
+        criterion = KldLoss(reduction="batchmean", temperature=args.temperature)
+    elif args.lossfn == "mse":
+        criterion = MseDirectionLoss(args.lamda)
+    else:
+        logging.ERROR("Loss function not defined!")
+
     for i in range(args.epochs):
+        student.train()
         l = 0
         for data, _ in train_loader:
             data = data.to(device)
             with torch.no_grad():
                 teacher_outs = teacher(data)
             student_outs = student(data)
-            loss = kd_loss_fn(teacher_outs, student_outs)
+            loss = criterion(teacher_outs, student_outs)
 
             l += loss.item()
 
