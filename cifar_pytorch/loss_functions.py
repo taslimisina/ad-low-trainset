@@ -27,14 +27,26 @@ class MseDirectionLoss(nn.Module):
         self.similarity_loss = torch.nn.CosineSimilarity()
 
     def forward(self, output_real, output_pred):
+        print("output_pred:", output_pred.shape)
+        print("output_real:", output_real.shape)
+
         y_pred_0 = output_pred
         y_0 = output_real
 
         # different terms of loss
         abs_loss_0 = self.criterion(y_pred_0, y_0)
-        loss_0 = 1 - self.similarity_loss(y_pred_0.view(y_pred_0.shape[0], -1), y_0.view(y_0.shape[0], -1))
+        print("abs_loss_0:", abs_loss_0.shape)
+        y_pred_flatten = y_pred_0.view(y_pred_0.shape[0], -1)
+        print("y_pred_flatten:", y_pred_flatten.shape)
+        y_flatten = y_0.view(y_0.shape[0], -1)
+        print("y_flatten:", y_flatten.shape)
+        sim_loss = self.similarity_loss(y_pred_flatten, y_flatten)
+        print("sim_loss:", sim_loss.shape)
+        loss_0 = 1 - sim_loss
+        print("loss_0:", loss_0.shape)
         if self.reduction == "mean":
             loss_0 = torch.mean(loss_0)
+            print("loss_0:", loss_0.shape)
 
         total_loss = loss_0 + self.lamda * (
                 abs_loss_0)
