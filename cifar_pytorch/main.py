@@ -73,9 +73,9 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
         targets_1v1 = [[] for i in range(10)]
         losses_1v1 = [[] for i in range(10)]
         if args.lossfn == "kl":
-            criterion = KldLoss(reduction='none', temperature=args.temperature)
+            criterion = KldLoss(reduction="none", temperature=args.temperature)
         elif args.lossfn == "mse":
-            criterion = MseDirectionLoss(args.lamda)
+            criterion = MseDirectionLoss(args.lamda, reduction="none")
         else:
             logging.ERROR("Loss function not defined!")
 
