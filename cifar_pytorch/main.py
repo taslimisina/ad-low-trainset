@@ -95,9 +95,7 @@ def test(teacher, student, normal_dataloader, anomaly_dataloader):
             data = data.to(device)
             teacher_outs = teacher(data)
             student_outs = student(data)
-            loss = criterion(F.log_softmax(student_outs / args.temperature, dim=1),
-                             F.softmax(teacher_outs / args.temperature, dim=1))
-            loss = loss.sum(dim=1)
+            loss = criterion(student_outs, teacher_outs)
             for i, l in enumerate(loss):
                 losses.append(l.item())
                 targets.append(1)
