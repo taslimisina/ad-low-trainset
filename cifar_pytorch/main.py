@@ -24,7 +24,7 @@ random.seed(seed)
 import numpy as np
 np.random.seed(seed)
 # torch.backends.cudnn.benchmark = False
-torch.use_deterministic_algorithms(True)
+# torch.use_deterministic_algorithms(True)
 torch.backends.cudnn.deterministic = True
 def seed_worker(worker_id):
     np.random.seed(seed)
